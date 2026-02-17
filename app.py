@@ -9,7 +9,10 @@ for sop runing:
 import streamlit as st
 from db.db import create_user, authenticate_user
 
-st.title("Budget Tracker 🚀")
+
+st.image("assets/logo.png", width=200)
+st.title("Budget Tracker")
+
 
 tab1, tab2 = st.tabs(["Login", "Sign Up"])
 
