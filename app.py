@@ -18,3 +18,5 @@ if st.button("Save Expense"):
     # Log logic here
     conn.update(spreadsheet="https://docs.google.com/spreadsheets/d/1VDWOVPBUMgveaFE_ugjCQVJSVO72MfFXbAowN-nUTeY/edit?usp=sharing", data=df)
     st.success("Data saved to Google Sheets!")
+
+st.write(df)
