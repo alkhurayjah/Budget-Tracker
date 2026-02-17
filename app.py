@@ -49,6 +49,7 @@
 
 import streamlit as st
 from streamlit_gsheets import GSheetsConnection
+import pandas as pd
 
 # App Title
 st.title("Google Sheets Read/Write Demo")
