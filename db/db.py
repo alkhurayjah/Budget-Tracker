@@ -2,4 +2,10 @@ import psycopg2
 import streamlit as st
 
 def get_connection():
-    return psycopg2.connect(st.secrets["postgresql://postgres.gddiloxvtcawylknvqnd:[2M&fQw/2PDa#Q#C]@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres"])
+    return psycopg2.connect(
+        host=st.secrets["DB_HOST"],
+        dbname=st.secrets["DB_NAME"],
+        user=st.secrets["DB_USER"],
+        password=st.secrets["2M&fQw/2PDa#Q#C"],
+        port=st.secrets["DB_PORT"],
+    )
