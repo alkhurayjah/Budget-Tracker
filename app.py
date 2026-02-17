@@ -65,8 +65,6 @@ df = conn.read(spreadsheet=SHEET_URL, usecols=[0, 1]) # Adjust columns as needed
 st.subheader("Current Data")
 st.dataframe(df)
 
----
-
 # 2. WRITE Data
 st.subheader("Add New Entry")
 
