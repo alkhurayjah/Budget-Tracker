@@ -79,7 +79,12 @@ with st.form("entry_form"):
             new_data = {"Name": name, "Message": message}
             
             # Append to the dataframe and update the sheet
-            updated_df = df.append(new_data, ignore_index=True)
+            # Convert the new dictionary into a small DataFrame first
+            new_row_df = pd.DataFrame([new_data])
+            
+            # Concatenate the old DataFrame with the new row
+            updated_df = pd.concat([df, new_row_df], ignore_index=True)
+
             conn.update(spreadsheet=SHEET_URL, data=updated_df)
             
             st.success("Data successfully written!")
