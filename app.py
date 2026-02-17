@@ -48,7 +48,7 @@
 #     st.rerun() # Refresh to show the new data in the table above
 
 import streamlit as st
-from medical_gsheets import GSheetsConnection
+from streamlit_gsheets import GSheetsConnection
 
 # App Title
 st.title("Google Sheets Read/Write Demo")
