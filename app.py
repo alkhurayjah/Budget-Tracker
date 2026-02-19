@@ -3,7 +3,7 @@ for running the app, use the command:
     streamlit run app.py
 
 for sop runing:
-      contrlo + c
+      contrlo + c ,
 
 """""
 import streamlit as st
