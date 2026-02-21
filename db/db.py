@@ -95,3 +95,50 @@ def update_password(username, new_password):
     conn.commit()
     cur.close()
     conn.close()
+# =====================
+# EXPENSES
+# =====================
+def add_expense_db(user_id, expense_date, amount, category, description):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        INSERT INTO expenses (user_id, expense_date, amount, category, description)
+        VALUES (%s, %s, %s, %s, %s)
+    """, (user_id, expense_date, amount, category, description))
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+
+def load_expenses_db(user_id):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT id, expense_date, amount, category, description
+        FROM expenses
+        WHERE user_id = %s
+        ORDER BY expense_date DESC
+    """, (user_id,))
+
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    return rows
+
+
+def delete_expense_db(expense_id, user_id):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        DELETE FROM expenses
+        WHERE id = %s AND user_id = %s
+    """, (expense_id, user_id))
+
+    conn.commit()
+    cur.close()
+    conn.close()
