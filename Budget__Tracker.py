@@ -438,11 +438,19 @@ class BudgetTrackerApp:
         if month.limit_mode is None:
             print("❌ Month limit mode is not set. Run Month Setup again.")
             return False
+        if month.budget is None:
+            print("❌ Month budget not set. Run Month Setup again.")
+            return False
+
+        # Target total depends on mode
+        target_total = 100.0 if month.limit_mode == "percent" else month.budget
 
         count = input_int_or_back("How many categories do you want to create? (type -1 to back): ", min_value=1)
         if count is None:
             print("ℹ️ Custom setup cancelled.")
             return False
+
+        running_sum = 0.0
 
         for idx in range(1, count + 1):
             print(f"\nCategory #{idx} (type -1 to back)")
@@ -450,6 +458,7 @@ class BudgetTrackerApp:
             if name == str(BACK):
                 print("ℹ️ Custom setup cancelled.")
                 return False
+
             while not name or name in month.categories:
                 if not name:
                     print("❌ Name cannot be empty.")
@@ -460,25 +469,72 @@ class BudgetTrackerApp:
                     print("ℹ️ Custom setup cancelled.")
                     return False
 
+            remaining = max(0.0, target_total - running_sum)
+
+            # If user already used up the total, force remaining categories to be 0
+            if remaining <= 1e-9:
+                print("ℹ️ You already allocated the full total. This category will be set to 0.")
+                value = 0.0
+                month.add_category(Category(name, value))
+                continue
+
             if month.limit_mode == "percent":
-                value = input_float_or_back("Enter percentage (0-100): ", min_value=0.0)
-                if value is None:
-                    print("ℹ️ Custom setup cancelled.")
-                    return False
-                while value > 100.0:
-                    print("❌ Percentage cannot exceed 100.")
-                    value = input_float_or_back("Enter percentage (0-100): ", min_value=0.0)
+                # percent must not exceed remaining and total <= 100
+                while True:
+                    value = input_float_or_back(
+                        f"Enter percentage (0-{remaining:.2f}) (type -1 to back): ",
+                        min_value=0.0
+                    )
                     if value is None:
                         print("ℹ️ Custom setup cancelled.")
                         return False
-                month.add_category(Category(name, value))
-            else:
-                value = input_float_or_back("Enter fixed amount (SAR): ", min_value=0.0)
-                if value is None:
-                    print("ℹ️ Custom setup cancelled.")
-                    return False
+                    if value <= remaining + 1e-9:
+                        break
+                    print(f"❌ You exceeded the remaining percentage. Remaining = {remaining:.2f}%")
+
                 month.add_category(Category(name, value))
 
+            else:
+                # fixed SAR must not exceed remaining and total <= budget
+                while True:
+                    value = input_float_or_back(
+                        f"Enter fixed amount (SAR) (0-{remaining:.2f}) (type -1 to back): ",
+                        min_value=0.0
+                    )
+                    if value is None:
+                        print("ℹ️ Custom setup cancelled.")
+                        return False
+                    if value <= remaining + 1e-9:
+                        break
+                    print(f"❌ You exceeded the remaining amount. Remaining = {fmt_money(remaining)} SAR")
+
+                month.add_category(Category(name, value))
+
+            running_sum += value
+
+        # After all categories: if leftover exists, offer to add it to one of created categories
+        leftover = target_total - running_sum
+        if leftover > 1e-9 and month.categories:
+            if month.limit_mode == "percent":
+                print(f"\nℹ️ You still have {leftover:.2f}% unallocated.")
+                unit = "%"
+            else:
+                print(f"\nℹ️ You still have {fmt_money(leftover)} SAR unallocated.")
+                unit = "SAR"
+
+            print("Do you want to add the remaining amount to one of your categories?")
+            print("1) Yes")
+            print("2) No")
+            ch = input_choice("Choose (1-2): ", ["1", "2"])
+
+            if ch == "1":
+                cat_name = self.pick_category_numbered(month, title="Choose category number to add the remaining to (or -1 to back): ")
+                if cat_name is not None:
+                    month.categories[cat_name].value += leftover
+                    print(f"✅ Added remaining {fmt_money(leftover)} {unit} to '{cat_name}'.")
+                    running_sum += leftover
+
+        print("✅ Custom categories created successfully.")
         return True
 
     # -------- Switch Month --------
