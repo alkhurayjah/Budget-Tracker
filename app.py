@@ -119,19 +119,29 @@ with tab3:
                 st.error("Wrong security answer ❌")
 
 is_logged_in = "user_id" in st.session_state
+today = dt_date.today()
 
+month_options = []
+for i in range(12):
+    m = today.month - i
+    y = today.year
+    while m <= 0:
+        m += 12
+        y -= 1
+    month_options.append(f"{y}-{m:02d}")
 if is_logged_in:
 
     with st.sidebar:
         st.header("Navigation")
+
         selected_month = st.selectbox(
             "Select Month Context",
-            get_available_months(st.session_state["user_id"])
-        )
+            month_options
+    )
 
-        if st.button("Logout 🚪"):
-            st.session_state.clear()
-            st.rerun()
+    if st.button("Logout 🚪"):
+        st.session_state.clear()
+        st.rerun()
 
 # =====================
 # AUTH GUARD (VERY IMPORTANT)
