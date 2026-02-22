@@ -582,135 +582,133 @@ def main():
 
 
     # ------------------ TAB 2: Add Expense ------------------
-with tab2:
-    st.header("➕ Add a New Expense")
+    with tab2:
+        st.header("➕ Add a New Expense")
 
-    if not current_month.is_setup():
-        st.warning("⚠️ Please set up this month first from 'Month Setup'.")
-    else:
-        with st.form("add_expense_form", clear_on_submit=True):
-
-            col1, col2 = st.columns(2)
-
-            with col1:
-                exp_date = st.date_input(
-                    "Expense Date",
-                    value=dt_date.today()
-                )
-                exp_cat = st.selectbox(
-                    "Category",
-                    list(current_month.categories.keys())
-                )
-
-            with col2:
-                exp_amount = st.number_input(
-                    "Amount (SAR)",
-                    min_value=0.01,
-                    step=10.0
-                )
-                exp_desc = st.text_input("Description")
-
-            submit_expense = st.form_submit_button("💾 Save Expense")
-
-        if submit_expense:
-
-        
-            if exp_amount <= 0:
-                st.error("❌ Amount must be greater than 0")
-            else:
-          
-                month_id, _ = get_or_create_month(
-                    st.session_state["user_id"],
-                    selected_month_key
-                )
-
-              
-                add_transaction(
-                    month_id=month_id,
-                    date=exp_date,
-                    amount=exp_amount,
-                    category=exp_cat,
-                    description=exp_desc
-                )
-
-                current_month.add_expense(
-                    exp_date,
-                    exp_amount,
-                    exp_cat,
-                    exp_desc
-                )
-
-                st.success("✅ Expense saved successfully")
-                st.rerun()
-    # ------------------ TAB 3: Overview ------------------
-    
-    with tab3:
-        st.header(f"Expenses Overview ({selected_month_key})")
         if not current_month.is_setup():
-            st.warning("⚠️ Month not set up yet.")
+            st.warning("⚠️ Please set up this month first from 'Month Setup'.")
         else:
+            with st.form("add_expense_form", clear_on_submit=True):
+
+                col1, col2 = st.columns(2)
+
+                with col1:
+                    exp_date = st.date_input(
+                        "Expense Date",
+                        value=dt_date.today()
+                    )
+                    exp_cat = st.selectbox(
+                        "Category",
+                        list(current_month.categories.keys())
+                    )
+
+                with col2:
+                    exp_amount = st.number_input(
+                        "Amount (SAR)",
+                        min_value=0.01,
+                        step=10.0
+                    )
+                    exp_desc = st.text_input("Description")
+
+                submit_expense = st.form_submit_button("💾 Save Expense")
+
+            if submit_expense:
+
+            
+                if exp_amount <= 0:
+                    st.error("❌ Amount must be greater than 0")
+                else:
+            
+                    month_id, _ = get_or_create_month(
+                        st.session_state["user_id"],
+                        selected_month_key
+                    )
+
+                
+                    add_transaction(
+                        month_id=month_id,
+                        date=exp_date,
+                        amount=exp_amount,
+                        category=exp_cat,
+                        description=exp_desc
+                    )
+
+                    current_month.add_expense(
+                        exp_date,
+                        exp_amount,
+                        exp_cat,
+                        exp_desc
+                    )
+
+                    st.success("✅ Expense saved successfully")
+                    st.rerun()
+        # ------------------ TAB 3: Overview ------------------
+        
+    with tab3:
+            st.header(f"Expenses Overview ({selected_month_key})")
+            
             total_spent = current_month.total_expenses()
             remaining = current_month.budget - total_spent
-            
-            # Metrics
+                
+                # Metrics
             col1, col2, col3 = st.columns(3)
             col1.metric("Total Budget", f"{current_month.budget:.2f} SAR")
             col2.metric("Total Spent", f"{total_spent:.2f} SAR")
             col3.metric("Remaining", f"{remaining:.2f} SAR", delta=f"{-total_spent:.2f} SAR", delta_color="normal")
-            
+                
             st.divider()
-            
+                
 
 
-            # Category Progress
-            
+                # Category Progress
+                
             st.subheader("Category Limits & Progress")
 
             totals = current_month.total_by_category()
             for cat_name, cat in current_month.categories.items():
-                spent = totals.get(cat_name, 0.0)
-                limit = cat.calc_limit(current_month.budget)
-                icon = calc_status(spent, limit)
-                pct = 0.0 if limit <= 0 else (spent / limit)
-                
-                if cat_name != "Other":
-                    st.write(f"**{cat_name}** {icon} ({spent:.2f} / {limit:.2f} SAR) {((spent / limit) * 100):.2f} %")
-                else:
-                    st.write(f"**{cat_name}** {icon} ({spent:.2f})")
+                    spent = totals.get(cat_name, 0.0)
+                    limit = cat.calc_limit(current_month.budget)
+                    icon = calc_status(spent, limit)
+                    pct = 0.0 if limit <= 0 else (spent / limit)
                     
-                # Get the dynamic color based on spending ratio
-                bar_color = get_progress_color(pct)
-                
-                # Cap the visual width at 100% so it doesn't break the container
-                visual_width = min(pct * 100, 100)
-                
-                # Create a custom HTML progress bar
-                custom_progress_html = f"""
-                <div style="width: 100%; background-color: #444444; border-radius: 5px; margin-bottom: 20px;">
-                    <div style="width: {visual_width}%; height: 8px; background-color: {bar_color}; border-radius: 5px; transition: width 0.5s;"></div>
-                </div>
-                """
-                if cat_name == "Other":
-
+                    if cat_name != "Other":
+                        st.write(f"**{cat_name}** {icon} ({spent:.2f} / {limit:.2f} SAR) {((spent / limit) * 100):.2f} %")
+                    else:
+                        st.write(f"**{cat_name}** {icon} ({spent:.2f})")
+                        
+                    # Get the dynamic color based on spending ratio
+                    bar_color = get_progress_color(pct)
+                    
+                    # Cap the visual width at 100% so it doesn't break the container
+                    visual_width = min(pct * 100, 100)
+                    
                     # Create a custom HTML progress bar
                     custom_progress_html = f"""
                     <div style="width: 100%; background-color: #444444; border-radius: 5px; margin-bottom: 20px;">
-                        <div style="width: 100%; height: 8px; background-color: SkyBlue; border-radius: 5px; transition: width 0.5s;"></div>
+                        <div style="width: {visual_width}%; height: 8px; background-color: {bar_color}; border-radius: 5px; transition: width 0.5s;"></div>
                     </div>
-                    """ 
+                    """
+                    if cat_name == "Other":
 
-                st.markdown(custom_progress_html, unsafe_allow_html=True)
+                        # Create a custom HTML progress bar
+                        custom_progress_html = f"""
+                        <div style="width: 100%; background-color: #444444; border-radius: 5px; margin-bottom: 20px;">
+                            <div style="width: 100%; height: 8px; background-color: SkyBlue; border-radius: 5px; transition: width 0.5s;"></div>
+                        </div>
+                        """ 
+
+                    st.markdown(custom_progress_html, unsafe_allow_html=True)
 
 
 
-            # # Expense Table
+                # # Expense Table
             st.subheader("Recent Expenses")
             if not current_month.expenses:
-                st.info("No expenses logged yet.")
+                    st.info("No expenses logged yet.")
             else:
-                df = pd.DataFrame([vars(e) for e in current_month.expenses])
-                df.rename(columns={'expense_id': 'ID', 'd': 'Date', 'amount': 'Amount (SAR)', 'category': 'Category', 'description': 'Description'}, inplace=True)
-                st.dataframe(df, use_container_width=True, hide_index=True)
+                    df = pd.DataFrame([vars(e) for e in current_month.expenses])
+                    df.rename(columns={'expense_id': 'ID', 'd': 'Date', 'amount': 'Amount (SAR)', 'category': 'Category', 'description': 'Description'}, inplace=True)
+                    st.dataframe(df, use_container_width=True, hide_index=True)
 
 
 
@@ -719,17 +717,15 @@ with tab2:
 
     with tab4:
         st.header("Settings")
-        if not current_month.is_setup():
-            st.warning("⚠️ Please complete Month Setup first.")
-        else:
-            with st.expander("Update Monthly Budget"):
+        
+        with st.expander("Update Monthly Budget"):
                 new_budget = st.number_input("New Budget (SAR)", min_value=1.0, value=current_month.budget, step=100.0)
                 if st.button("Update Budget"):
                     current_month.set_budget(new_budget)
                     st.success("✅ Budget updated!")
                     st.rerun()
 
-            with st.expander("Manage Categories"):
+        with st.expander("Manage Categories"):
 
                 st.subheader("Current Allocation")
 
@@ -925,7 +921,7 @@ with tab2:
                             
 
 
-            with st.expander("Manage Expenses (Edit/Delete)"):
+    with st.expander("Manage Expenses (Edit/Delete)"):
                 if not current_month.expenses:
                     st.info("No expenses to manage.")
                 else:
