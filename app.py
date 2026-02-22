@@ -226,28 +226,18 @@ class BudgetMonth:
 
 
 
-    def add_expense(self, user_id, month_id, d, amount, category, description):
-    # 1. تجهيز البيانات للإرسال للقاعدة
-    expense_data = {
-        "user_id": user_id,
-        "month_id": month_id, # مهم جداً للربط بالشهر
-        "expense_date": str(d),
-        "amount": amount,
-        "category": category,
-        "description": description.strip()
-    }
-    
-    # 2. أمر الحفظ في قاعدة البيانات (مثال باستخدام Supabase/PostgreSQL)
-    try:
-        response = self.db.table("expenses").insert(expense_data).execute()
-        
-        # 3. تحديث القائمة المحلية فقط إذا نجح الحفظ في القاعدة
-        if response.data:
-            self.expenses.append(response.data[0])
-            return response.data[0]
-    except Exception as e:
-        print(f"خطأ في الحفظ: {e}")
-        return None
+
+    def add_expense(self, d, amount, category, description):
+        exp = Expense(
+            expense_id=self._next_expense_id,
+            d=d,
+            amount=amount,
+            category=category,
+            description=description.strip()
+        )
+        self._next_expense_id += 1
+        self.expenses.append(exp)
+        return exp
 
     def delete_expense_by_id(self, expense_id):
         for i, e in enumerate(self.expenses):
