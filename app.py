@@ -640,9 +640,10 @@ def main():
                         exp_desc
                     )
 
-                    st.success("✅ Expense saved successfully")
-                    st.rerun()
-        # ------------------ TAB 3: Overview ------------------
+        st.success("✅ Expense saved successfully")
+        st.rerun()
+
+    # ------------------ TAB 3: Overview ------------------
         
     with tab3:
             st.header(f"Expenses Overview ({selected_month_key})")
