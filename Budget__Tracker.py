@@ -1103,6 +1103,29 @@ class BudgetTrackerApp:
                     print(f"✅ Date updated and expense moved to month {new_mk}.")
                     break
 
+# Reflection:
+# The most challenging part of this project was implementing input validation and making sure the system is
+# prepared for all possible user scenarios We had to ensure users cannot exceed their total budget,
+# over-allocate category limits (whether percentage or fixed), enter zero or negative values,
+# or create conflicts between months.Making the system logically consistent and safe against incorrect inputs
+# required careful planning and testing.
+
+
+# The concept we enjoyed the most was applying Object-Oriented Programming. Designing and connecting
+# classes like Category, Expense, BudgetMonth, and the main application class helped us structure
+# the system in a clean and scalable way. It was satisfying to see how all components worked together
+#  to form a complete financial management system.
+
+
+# If we had more time, we would focus on adding advanced charts and data visualization. 
+# For example, we would implement spending trend line charts, category distribution pie charts,
+# and monthly comparison bar charts. This would make the system more analytical and provide clearer insights
+# into users’ financial behavior instead of only displaying numerical summaries.
+
+
+
+
+
 
 # =========================
 # Main
