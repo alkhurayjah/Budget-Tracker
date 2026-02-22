@@ -586,9 +586,10 @@ with tab2:
     st.header("➕ Add a New Expense")
 
     if not current_month.is_setup():
-        st.warning("⚠️ Please set up this month in the 'Month Setup' tab first.")
+        st.warning("⚠️ Please set up this month first from 'Month Setup'.")
     else:
         with st.form("add_expense_form", clear_on_submit=True):
+
             col1, col2 = st.columns(2)
 
             with col1:
@@ -604,28 +605,26 @@ with tab2:
             with col2:
                 exp_amount = st.number_input(
                     "Amount (SAR)",
-                    min_value=0.00,
-                    value=0.00,
+                    min_value=0.01,
                     step=10.0
                 )
                 exp_desc = st.text_input("Description")
 
-            submit_expense = st.form_submit_button("Save Expense")
+            submit_expense = st.form_submit_button("💾 Save Expense")
 
-        # =====================
-        # SAVE EXPENSE (DB)
-        # =====================
         if submit_expense:
+
+        
             if exp_amount <= 0:
-                st.error("❌ The expense amount must be greater than 0.00 SAR.")
+                st.error("❌ Amount must be greater than 0")
             else:
-                # Get or create month in DB
+          
                 month_id, _ = get_or_create_month(
                     st.session_state["user_id"],
                     selected_month_key
                 )
 
-                # Save to database
+              
                 add_transaction(
                     month_id=month_id,
                     date=exp_date,
@@ -634,7 +633,6 @@ with tab2:
                     description=exp_desc
                 )
 
-                # Update UI memory (for immediate display)
                 current_month.add_expense(
                     exp_date,
                     exp_amount,
@@ -644,7 +642,6 @@ with tab2:
 
                 st.success("✅ Expense saved successfully")
                 st.rerun()
-        
     # ------------------ TAB 3: Overview ------------------
     
     with tab3:
