@@ -38,7 +38,8 @@ with tab1:
         user = authenticate_user(username, password)
         if user:
             st.success("Logged in successfully ✅")
-            st.session_state["user_id"] = user[0]
+            st.session_state["user_id"] = str(user[0])
+            st.rerun()
         else:
             st.error("Invalid credentials ❌")
 
