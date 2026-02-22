@@ -647,6 +647,7 @@ def main():
         
     with tab3:
         st.header(f"Expenses Overview ({selected_month_key})")
+        st.write("TAB 3 START")
         if current_month.budget is None:
             st.info("ℹ️ This month is not set up yet. Please complete Month Setup first.")
             st.stop()
@@ -720,6 +721,7 @@ def main():
 
     with tab4:
         st.header("Settings")
+        st.write("TAB 4 START")
         if current_month.budget is None:
             st.info("ℹ️ Please complete Month Setup first.")
             st.stop()
