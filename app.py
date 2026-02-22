@@ -646,7 +646,9 @@ def main():
         
     with tab3:
             st.header(f"Expenses Overview ({selected_month_key})")
-            
+            if current_month.budget is None:
+                st.info("ℹ️ This month is not set up yet. Please complete Month Setup first.")
+                st.stop()
             total_spent = current_month.total_expenses()
             remaining = current_month.budget - total_spent
                 
@@ -717,6 +719,9 @@ def main():
 
     with tab4:
         st.header("Settings")
+        if current_month.budget is None:
+            st.info("ℹ️ Please complete Month Setup first.")
+            st.stop()
         
         with st.expander("Update Monthly Budget"):
                 new_budget = st.number_input("New Budget (SAR)", min_value=1.0, value=current_month.budget, step=100.0)
