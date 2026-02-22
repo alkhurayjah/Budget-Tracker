@@ -29,6 +29,11 @@ st.title("Budget Tracker")
 
 tab1, tab2, tab3 = st.tabs(["Login", "Sign Up", "Forgot Password"])
 
+#check if user is logged in, if not show login/signup/forgot password tabs
+if "user_id" not in st.session_state:
+    st.warning("Please login to continue 🔐")
+    st.stop()
+
 # LOGIN
 with tab1:
     st.subheader("Login")
@@ -113,11 +118,12 @@ with tab3:
             else:
                 st.error("Wrong security answer ❌")
 
+# =====================
+# AUTH GUARD (VERY IMPORTANT)
+# =====================
 
 
 
-
-import streamlit as st
 import pandas as pd
 from dataclasses import dataclass
 from datetime import date as dt_date, datetime
