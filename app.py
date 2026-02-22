@@ -651,8 +651,8 @@ def main_app():
                         exp_desc
                     )
 
-        st.success("✅ Expense saved successfully")
-        st.rerun()
+                    st.success("✅ Expense saved successfully")
+                    st.rerun()
 
     # ------------------ TAB 3: Overview ------------------
     with tab3:
