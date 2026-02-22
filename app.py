@@ -118,8 +118,6 @@ def month_key_from_date(d):
 
 def calc_status(spent, limit):
 
-    return ""
-
     if limit <= 0.00:
         return "ℹ️"
     ratio = spent / limit
