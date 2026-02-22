@@ -8,6 +8,10 @@ for sop runing:
 """""
 
 import streamlit as st
+import pandas as pd
+from dataclasses import dataclass
+from datetime import date as dt_date, datetime
+import calendar
 from db.db import (
     create_user,
     authenticate_user,
@@ -29,19 +33,7 @@ st.title("Budget Tracker")
 
 tab1, tab2, tab3 = st.tabs(["Login", "Sign Up", "Forgot Password"])
 
-#check if user is logged in, if not show login/signup/forgot password tabs
-if "user_id" not in st.session_state:
-    st.warning("Please login to continue 🔐")
-else:
-    # =====================
-    # MAIN APP (Protected)
-    # =====================
 
-    st.header("💰 Personal Budget Tracker")
-    # Month setup
-    # Add expense
-    # Overview
-    # Settings
 
 # LOGIN
 with tab1:
@@ -79,7 +71,6 @@ with tab2:
             st.error("User already exists or error occurred")
 
 # FORGOT PASSWORD
-# FORGOT PASSWORD (UPDATED)
 with tab3:
     st.subheader("Forgot Password")
 
@@ -127,16 +118,25 @@ with tab3:
             else:
                 st.error("Wrong security answer ❌")
 
+is_logged_in = "user_id" in st.session_state
+
+if is_logged_in:
+
+    with st.sidebar:
+        st.header("Navigation")
+        selected_month = st.selectbox(
+            "Select Month Context",
+            get_available_months(st.session_state["user_id"])
+        )
+
+        if st.button("Logout 🚪"):
+            st.session_state.clear()
+            st.rerun()
+
 # =====================
 # AUTH GUARD (VERY IMPORTANT)
 # =====================
 
-
-
-import pandas as pd
-from dataclasses import dataclass
-from datetime import date as dt_date, datetime
-import calendar
 
 
 def apply_custom_width():
@@ -915,6 +915,12 @@ def main():
                             st.success("✅ Expense updated!")
                             st.rerun()
 
-if __name__ == "__main__":
+# =====================
+# APP ENTRY POINT
+# =====================
+
+if "user_id" in st.session_state:
     main()
+else:
+    st.info("🔐 Please login to continue")
 
