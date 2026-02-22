@@ -645,6 +645,8 @@ def main():
 
     # ------------------ TAB 3: Overview ------------------
     with tab3:
+        st.write("TAB 3 OK")
+
         st.header(f"Expenses Overview ({selected_month_key})")
 
         if current_month.budget is None:
