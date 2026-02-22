@@ -95,53 +95,6 @@ def update_password(username, new_password):
     conn.commit()
     cur.close()
     conn.close()
-# =====================
-# EXPENSES
-# =====================
-def add_expense_db(user_id, expense_date, amount, category, description):
-    conn = get_connection()
-    cur = conn.cursor()
-
-    cur.execute("""
-        INSERT INTO expenses (user_id, expense_date, amount, category, description)
-        VALUES (%s, %s, %s, %s, %s)
-    """, (user_id, expense_date, amount, category, description))
-
-    conn.commit()
-    cur.close()
-    conn.close()
-
-
-def load_expenses_db(user_id):
-    conn = get_connection()
-    cur = conn.cursor()
-
-    cur.execute("""
-        SELECT id, expense_date, amount, category, description
-        FROM expenses
-        WHERE user_id = %s
-        ORDER BY expense_date DESC
-    """, (user_id,))
-
-    rows = cur.fetchall()
-    cur.close()
-    conn.close()
-
-    return rows
-
-
-def delete_expense_db(expense_id, user_id):
-    conn = get_connection()
-    cur = conn.cursor()
-
-    cur.execute("""
-        DELETE FROM expenses
-        WHERE id = %s AND user_id = %s
-    """, (expense_id, user_id))
-
-    conn.commit()
-    cur.close()
-    conn.close()
 
 def verify_user_phone(username, phone):
     conn = get_connection()
@@ -157,3 +110,89 @@ def verify_user_phone(username, phone):
     conn.close()
 
     return result is not None
+def get_or_create_month(user_id, month_key):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT id, budget
+        FROM months
+        WHERE user_id = %s AND month = %s
+    """, (user_id, month_key))
+
+    row = cur.fetchone()
+
+    if row:
+        cur.close()
+        conn.close()
+        return row  # (id, budget)
+
+    cur.execute("""
+        INSERT INTO months (user_id, month, budget)
+        VALUES (%s, %s, %s)
+        RETURNING id, budget
+    """, (user_id, month_key, 0))
+
+    row = cur.fetchone()
+    conn.commit()
+    cur.close()
+    conn.close()
+    return row
+
+def add_category(month_id, name, limit_type, limit_value):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        INSERT INTO categories (month_id, name, limit_type, limit_value)
+        VALUES (%s, %s, %s, %s)
+    """, (month_id, name, limit_type, limit_value))
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+
+def load_categories(month_id):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT id, name, limit_type, limit_value
+        FROM categories
+        WHERE month_id = %s
+    """, (month_id,))
+
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    return rows
+
+def add_transaction(month_id, date, amount, category, description):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        INSERT INTO transactions (month_id, date, type, amount, category, description)
+        VALUES (%s, %s, 'expense', %s, %s, %s)
+    """, (month_id, date, amount, category, description))
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+def load_transactions(month_id):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT id, date, amount, category, description
+        FROM transactions
+        WHERE month_id = %s
+        ORDER BY date DESC
+    """, (month_id,))
+
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    return rows
