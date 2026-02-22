@@ -711,7 +711,7 @@ def main():
             else:
                     df = pd.DataFrame([vars(e) for e in current_month.expenses])
                     df.rename(columns={'expense_id': 'ID', 'd': 'Date', 'amount': 'Amount (SAR)', 'category': 'Category', 'description': 'Description'}, inplace=True)
-                    st.dataframe(df, use_container_width=True, hide_index=True)
+    st.dataframe(df, use_container_width=True, hide_index=True)
 
 
 
@@ -954,6 +954,7 @@ def main():
                             target_exp.amount = edit_amt
                             target_exp.category = edit_cat
                             target_exp.description = edit_desc
+                            current_month.save_expense(target_exp)
                             st.success("✅ Expense updated!")
                             st.rerun()
 
