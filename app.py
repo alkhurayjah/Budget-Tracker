@@ -699,7 +699,7 @@ def main():
         st.write("TAB 4 START")
         if current_month.budget is None:
             st.info("ℹ️ Please complete Month Setup first.")
-            st.stop()
+        
         
         with st.expander("Update Monthly Budget"):
                 new_budget = st.number_input("New Budget (SAR)", min_value=1.0, value=current_month.budget, step=100.0)
