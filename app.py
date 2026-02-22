@@ -146,6 +146,10 @@ if is_logged_in:
 # =====================
 # AUTH GUARD (VERY IMPORTANT)
 # =====================
+if "user_id" not in st.session_state:
+    st.warning("🔐 Please login to continue")
+    st.stop()
+
 
 
 
