@@ -644,80 +644,82 @@ def main():
         st.rerun()
 
     # ------------------ TAB 3: Overview ------------------
-        
+# ------------------ TAB 3: Overview ------------------
     with tab3:
         st.header(f"Expenses Overview ({selected_month_key})")
         st.write("TAB 3 START")
+
         if current_month.budget is None:
             st.info("ℹ️ This month is not set up yet. Please complete Month Setup first.")
         else:
-            # كل كود الـ Overview أو Settings هنا)
+            # ===== Metrics =====
             total_spent = current_month.total_expenses()
             remaining = current_month.budget - total_spent
-                
-                # Metrics
-        col1, col2, col3 = st.columns(3)
-        col1.metric("Total Budget", f"{current_month.budget:.2f} SAR")
-        col2.metric("Total Spent", f"{total_spent:.2f} SAR")
-        col3.metric("Remaining", f"{remaining:.2f} SAR", delta=f"{-total_spent:.2f} SAR", delta_color="normal")
-                
-        st.divider()
-                
 
+            col1, col2, col3 = st.columns(3)
+            col1.metric("Total Budget", f"{current_month.budget:.2f} SAR")
+            col2.metric("Total Spent", f"{total_spent:.2f} SAR")
+            col3.metric(
+                "Remaining",
+                f"{remaining:.2f} SAR",
+                delta=f"{-total_spent:.2f} SAR",
+                delta_color="normal"
+            )
 
-                # Category Progress
-                
-        st.subheader("Category Limits & Progress")
+            st.divider()
 
-        totals = current_month.total_by_category()
-        for cat_name, cat in current_month.categories.items():
-            spent = totals.get(cat_name, 0.0)
-            limit = cat.calc_limit(current_month.budget)
-            icon = calc_status(spent, limit)
-            pct = 0.0 if limit <= 0 else (spent / limit)
-                    
-            if cat_name != "Other":
-                st.write(f"**{cat_name}** {icon} ({spent:.2f} / {limit:.2f} SAR) {((spent / limit) * 100):.2f} %")
-            else:
-                        st.write(f"**{cat_name}** {icon} ({spent:.2f})")
-                        
-                    # Get the dynamic color based on spending ratio
-            bar_color = get_progress_color(pct)
-                    
-                    # Cap the visual width at 100% so it doesn't break the container
-            visual_width = min(pct * 100, 100)
-                    
-                    # Create a custom HTML progress bar
-            custom_progress_html = f"""
-                    <div style="width: 100%; background-color: #444444; border-radius: 5px; margin-bottom: 20px;">
-                        <div style="width: {visual_width}%; height: 8px; background-color: {bar_color}; border-radius: 5px; transition: width 0.5s;"></div>
+            # ===== Category Progress =====
+            st.subheader("Category Limits & Progress")
+
+            totals = current_month.total_by_category()
+            for cat_name, cat in current_month.categories.items():
+                spent = totals.get(cat_name, 0.0)
+                limit = cat.calc_limit(current_month.budget)
+                pct = 0.0 if limit <= 0 else spent / limit
+                icon = calc_status(spent, limit)
+
+                if cat_name != "Other":
+                    st.write(
+                        f"**{cat_name}** {icon} "
+                        f"({spent:.2f} / {limit:.2f} SAR) "
+                        f"{pct * 100:.2f}%"
+                 )
+                else:
+                    st.write(f"**{cat_name}** {icon} ({spent:.2f})")
+
+                bar_color = get_progress_color(pct)
+                visual_width = min(pct * 100, 100)
+
+                if cat_name == "Other":
+                    bar_color = "SkyBlue"
+                    visual_width = 100
+
+                st.markdown(
+                    f"""
+                    <div style="width:100%; background:#444; border-radius:5px; margin-bottom:20px;">
+                        <div style="width:{visual_width}%; height:8px; background:{bar_color}; border-radius:5px;"></div>
                     </div>
-                    """
-            if cat_name == "Other":
+                    """,
+                    unsafe_allow_html=True
+                )
 
-                        # Create a custom HTML progress bar
-                custom_progress_html = f"""
-                        <div style="width: 100%; background-color: #444444; border-radius: 5px; margin-bottom: 20px;">
-                            <div style="width: 100%; height: 8px; background-color: SkyBlue; border-radius: 5px; transition: width 0.5s;"></div>
-                        </div>
-                        """ 
-
-            st.markdown(custom_progress_html, unsafe_allow_html=True)
-
-
-
-                # # Expense Table
-            st.subheader("Recent Expenses")
-            if not current_month.expenses:
-                    st.info("No expenses logged yet.")
-            else:
-                    df = pd.DataFrame([vars(e) for e in current_month.expenses])
-                    df.rename(columns={'expense_id': 'ID', 'd': 'Date', 'amount': 'Amount (SAR)', 'category': 'Category', 'description': 'Description'}, inplace=True)
-        st.dataframe(df, use_container_width=True, hide_index=True)
-
-
-
-
+        # ===== Expense Table =====
+        st.subheader("Recent Expenses")
+        if not current_month.expenses:
+            st.info("No expenses logged yet.")
+        else:
+            df = pd.DataFrame([vars(e) for e in current_month.expenses])
+            df.rename(
+                columns={
+                    "expense_id": "ID",
+                    "d": "Date",
+                    "amount": "Amount (SAR)",
+                    "category": "Category",
+                    "description": "Description",
+                },
+                inplace=True,
+            )
+            st.dataframe(df, use_container_width=True, hide_index=True)
     # ------------------ TAB 4: Settings ------------------
 
     with tab4:
