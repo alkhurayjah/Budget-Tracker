@@ -32,7 +32,16 @@ tab1, tab2, tab3 = st.tabs(["Login", "Sign Up", "Forgot Password"])
 #check if user is logged in, if not show login/signup/forgot password tabs
 if "user_id" not in st.session_state:
     st.warning("Please login to continue 🔐")
-    st.stop()
+else:
+    # =====================
+    # MAIN APP (Protected)
+    # =====================
+
+    st.header("💰 Personal Budget Tracker")
+    # Month setup
+    # Add expense
+    # Overview
+    # Settings
 
 # LOGIN
 with tab1:
