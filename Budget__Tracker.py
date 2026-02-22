@@ -8,25 +8,25 @@ BACK = -1  # user can type -1 to go back anytime
 # Helper Functions
 # =========================
 
-def line():
-    print("-" * 60)
+def line():  
+    print("-" * 60)   # Print separator line
 
 
 def input_choice(prompt, valid):
-    while True:
+    while True:                # Validate user choice from allowed options
         choice = input(prompt).strip()
         if choice in valid:
             return choice
         print(f"❌ Invalid choice. Choose from: {', '.join(valid)}")
 
 
-def input_float_or_back(prompt, min_value=0.0):
+def input_float_or_back(prompt, min_value=0.0):   # Get float input or return None if user goes back
     while True:
         raw = input(prompt).strip()
-        if raw == str(BACK):
+        if raw == str(BACK):         # Go back option
             return None
         try:
-            val = float(raw)
+            val = float(raw)    # Convert to float
             if val >= min_value:
                 return val
             print(f"❌ Value must be >= {min_value}")
@@ -34,45 +34,45 @@ def input_float_or_back(prompt, min_value=0.0):
             print("❌ Please enter a valid number (or -1 to back).")
 
 
-def input_int_or_back(prompt, min_value=0):
+def input_int_or_back(prompt, min_value=0):   # Get integer input or return None if user goes back
     while True:
         raw = input(prompt).strip()
-        if raw == str(BACK):
+        if raw == str(BACK):     
             return None
         try:
-            val = int(raw)
-            if val >= min_value:
+            val = int(raw)    # Convert to integer
+            if val >= min_value: # Validate minimum value
                 return val
             print(f"❌ Value must be >= {min_value}")
         except ValueError:
             print("❌ Please enter a valid integer (or -1 to back).")
 
 
-def input_date_or_today_or_back(prompt):
+def input_date_or_today_or_back(prompt):  # Get date input, today by default, or return None if back
     while True:
         raw = input(prompt).strip()
         if raw == str(BACK):
             return None
-        if raw == "":
-            return dt_date.today()
+        if raw == "":   # Default to today
+            return dt_date.today()   
         try:
             return datetime.strptime(raw, "%Y-%m-%d").date()
         except ValueError:
             print("❌ Invalid date format. Use YYYY-MM-DD, press Enter for today, or -1 to back.")
 
-
+# Convert date to "YYYY-MM" format (month key)
 def month_key_from_date(d: dt_date) -> str:
     return d.strftime("%Y-%m")
 
-
+# Format float as money (remove trailing zeros)
 def fmt_money(x: float) -> str:
     s = f"{x:.2f}"
     return s.rstrip("0").rstrip(".")
 
-
+# Determine spending status based on ratio
 def calc_status(spent: float, limit: float) -> str:
     if limit <= 0:
-        return "ℹ️"
+        return "ℹ️"  # No limit set
     ratio = spent / limit
     if ratio < 0.50:
         return "✅"
@@ -80,9 +80,9 @@ def calc_status(spent: float, limit: float) -> str:
         return "⚠️"
     if ratio < 1.00:
         return "🔶"
-    return "🛑"
+    return "🛑"   # Exceeded limit
 
-
+# Return status message based on icon
 def status_message(icon: str) -> str:
     if icon == "✅":
         return "✅ Safe: You are below 50% of this category limit."
@@ -229,16 +229,16 @@ class BudgetMonth:
         return None
 
     # ---- Calculations ----
-    def total_expenses(self) -> float:
-        return sum(e.amount for e in self.expenses)
-
-    def total_by_category(self) -> dict[str, float]:
+    def total_expenses(self) -> float:   # Sum of all expenses 
+        return sum(e.amount for e in self.expenses)  
+    
+    def total_by_category(self) -> dict[str, float]:  # Sum expenses grouped by category
         totals: dict[str, float] = {}
         for e in self.expenses:
             totals[e.category] = totals.get(e.category, 0.0) + e.amount
         return totals
 
-    def top_and_lowest_category(self):
+    def top_and_lowest_category(self):  # Get highest and lowest category spending
         totals = self.total_by_category()
         if not totals:
             return None, None
@@ -246,7 +246,7 @@ class BudgetMonth:
         low = min(totals.items(), key=lambda x: x[1])
         return top, low
 
-    def highest_spending_day(self):
+    def highest_spending_day(self):  # Find day with highest total spending
         if not self.expenses:
             return None
         daily: dict[dt_date, float] = {}
@@ -254,7 +254,7 @@ class BudgetMonth:
             daily[e.d] = daily.get(e.d, 0.0) + e.amount
         return max(daily.items(), key=lambda x: x[1])
 
-    def status_summary_counts(self):
+    def status_summary_counts(self):   # Count categories by status icons
         counts = {"✅": 0, "⚠️": 0, "🔶": 0, "🛑": 0}
         if self.budget is None or self.limit_mode is None:
             return counts
@@ -267,7 +267,7 @@ class BudgetMonth:
                 counts[icon] += 1
         return counts
 
-    def category_progress_line(self, cat_name: str):
+    def category_progress_line(self, cat_name: str):  # Build a progress line for one category
         if self.budget is None or self.limit_mode is None or cat_name not in self.categories:
             return "", "ℹ️"
         totals = self.total_by_category()
@@ -297,15 +297,15 @@ class BudgetTrackerApp:
             ("Education", 10.0),
         ]
 
-    def get_month(self, month_key: str) -> BudgetMonth:
+    def get_month(self, month_key: str) -> BudgetMonth: # Get month object (create if not exists)
         if month_key not in self.months:
             self.months[month_key] = BudgetMonth(month_key)
         return self.months[month_key]
 
-    def current_month(self) -> BudgetMonth:
+    def current_month(self) -> BudgetMonth:   # Get current month object
         return self.get_month(self.current_month_key)
 
-    def ensure_setup(self, month: BudgetMonth) -> bool:
+    def ensure_setup(self, month: BudgetMonth) -> bool:  # Check if month setup is completed
         if not month.is_setup():
             print("⚠️ This month is not set up yet. Please run Month Setup first.")
             return False
@@ -379,14 +379,14 @@ class BudgetTrackerApp:
                 month.add_category(Category(name, month.budget * (pct / 100.0)))
 
     def copy_setup_from_month(self, source: BudgetMonth, target: BudgetMonth):
-        if source.budget is not None:
+        if source.budget is not None:      # Copy budget and mode
             target.budget = source.budget
         target.limit_mode = source.limit_mode
         target.categories.clear()
         for c in source.categories.values():
             target.add_category(Category(c.name, c.value))
 
-    def menu_month_setup(self):
+    def menu_month_setup(self): 
         month = self.current_month()
         while True:
             print("\n--- Month Setup ---")
@@ -397,7 +397,7 @@ class BudgetTrackerApp:
             if budget is None:
                 return
 
-            month.set_budget(budget)
+            month.set_budget(budget)  # Save budget
 
             print("\nChoose ONE unified limit mode for ALL categories in this month:")
             print("1) Percentage (all categories are % of budget)")
@@ -434,7 +434,7 @@ class BudgetTrackerApp:
                     print(f"✅ Month setup saved for {self.current_month_key}.")
                     return
 
-    def create_custom_categories(self, month: BudgetMonth) -> bool:
+    def create_custom_categories(self, month: BudgetMonth) -> bool:  # Create user-defined categories
         if month.limit_mode is None:
             print("❌ Month limit mode is not set. Run Month Setup again.")
             return False
@@ -552,11 +552,11 @@ class BudgetTrackerApp:
                 return
 
             if choice == "1":
-                self.view_months_list()
+                self.view_months_list()  # Show list
             elif choice == "2":
-                self.switch_to_existing_month()
+                self.switch_to_existing_month()  # Switch month
             else:
-                self.create_new_month()
+                self.create_new_month()   # Create new month
 
     def view_months_list(self):
         print("\n--- Months List ---")
@@ -564,9 +564,9 @@ class BudgetTrackerApp:
             print("ℹ️ No months yet. Add a setup or expense first.")
             return
         for i, mk in enumerate(sorted(self.months.keys()), start=1):
-            tag = " (current)" if mk == self.current_month_key else ""
+            tag = " (current)" if mk == self.current_month_key else ""  # Mark current
             month = self.months[mk]
-            setup = "✅ setup" if month.is_setup() else "⚠️ not setup"
+            setup = "✅ setup" if month.is_setup() else "⚠️ not setup"   # Setup status
             print(f"{i}) {mk}{tag} | {setup} | Expenses: {len(month.expenses)}")
         line()
 
@@ -583,7 +583,7 @@ class BudgetTrackerApp:
         idx = input_int_or_back("Choose month number (or -1): ", min_value=1)
         if idx is None:
             return
-        if not (1 <= idx <= len(keys)):
+        if not (1 <= idx <= len(keys)):  # Validate index
             print("❌ Invalid month number.")
             return
 
@@ -608,15 +608,15 @@ class BudgetTrackerApp:
         print("2) No")
         ch = input_choice("Choose (1-2): ", ["1", "2"])
         if ch == "1":
-            self.copy_setup_from_month(self.current_month(), new_month)
+            self.copy_setup_from_month(self.current_month(), new_month)  # Copy setup
             print("✅ Setup copied.")
 
-        self.current_month_key = mk
-        print(f"✅ Created & switched to {mk}")
+        self.current_month_key = mk  # Set as current
+        print(f"✅ Created & switched to {mk}")  
 
     # -------- Add Expense --------
-
-    def pick_category_numbered(self, month: BudgetMonth, title: str):
+      
+    def pick_category_numbered(self, month: BudgetMonth, title: str): # Pick category using numbered list
         categories = list(month.categories.keys())
         if not categories:
             print("❌ No categories. Run Month Setup.")
@@ -631,11 +631,11 @@ class BudgetTrackerApp:
             idx = input_int_or_back(title, min_value=1)
             if idx is None:
                 return None
-            if 1 <= idx <= len(categories):
+            if 1 <= idx <= len(categories):  # Valid selection
                 return categories[idx - 1]
             print("❌ Invalid category number.")
 
-    def menu_add_expense(self):
+    def menu_add_expense(self):  # Add new expense flow
         while True:
             print("\n--- Add Expense ---")
             print(f"Type {BACK} to go back anytime.\n")
@@ -645,7 +645,7 @@ class BudgetTrackerApp:
                 return
 
             mk = month_key_from_date(d)
-            month = self.get_month(mk)
+            month = self.get_month(mk)  # Get month object
 
             if not self.ensure_setup(month):
                 print(f"ℹ️ This expense belongs to month {mk}")
@@ -656,7 +656,7 @@ class BudgetTrackerApp:
             if amount is None:
                 return
 
-            if month.budget is not None:
+            if month.budget is not None:  # Block if monthly budget will be exceeded
                 current_total = month.total_expenses()
                 if current_total + amount > month.budget + 1e-9:
                     print("\n🛑 Monthly budget exceeded!")
@@ -692,7 +692,7 @@ class BudgetTrackerApp:
 
     # -------- Expenses Overview --------
 
-    def menu_expenses_overview(self):
+    def menu_expenses_overview(self):  # Expenses overview menu
         month = self.current_month()
         if not self.ensure_setup(month):
             return
@@ -706,11 +706,11 @@ class BudgetTrackerApp:
             choice = input_choice("Choose (1-3 or -1): ", ["1", "2", "3", str(BACK)])
 
             if choice == "1":
-                self.view_all_expenses(month)
+                self.view_all_expenses(month)  # Show all
             elif choice == "2":
-                self.view_statistics(month)
+                self.view_statistics(month)  # Show stats
             elif choice == "3":
-                self.filter_by_category(month)
+                self.filter_by_category(month)  # Filter by category
             else:
                 return
 
@@ -732,12 +732,12 @@ class BudgetTrackerApp:
             print("❌ Month budget not set.")
             return
 
-        total = month.total_expenses()
-        remaining = month.budget - total
+        total = month.total_expenses()   # Total spent
+        remaining = month.budget - total  # Remaining budget
 
-        top, low = month.top_and_lowest_category()
-        best_day = month.highest_spending_day()
-        counts = month.status_summary_counts()
+        top, low = month.top_and_lowest_category()  # Top/lowest categories
+        best_day = month.highest_spending_day()  # Highest spending day
+        counts = month.status_summary_counts()  # Status counts
 
         mode_name = "Percentage" if month.limit_mode == "percent" else "Fixed"
 
@@ -747,22 +747,22 @@ class BudgetTrackerApp:
         print(f"Total Expenses: {fmt_money(total)} SAR")
         print(f"Remaining: {fmt_money(remaining)} SAR")
 
-        if top:
+        if top:  # Top category
             print(f"Top Category: {top[0]} ({fmt_money(top[1])} SAR)")
         else:
             print("Top Category: ℹ️ No spending yet.")
 
-        if low:
+        if low:  # Lowest category
             print(f"Lowest Category: {low[0]} ({fmt_money(low[1])} SAR)")
         else:
             print("Lowest Category: ℹ️ No spending yet.")
 
-        if best_day:
+        if best_day:  # Highest spending day
             print(f"Highest Spending Day: {best_day[0]} ({fmt_money(best_day[1])} SAR)")
         else:
             print("Highest Spending Day: ℹ️ No spending yet.")
 
-        print("\nStatus Summary:")
+        print("\nStatus Summary:")  # Status summary
         print(f"✅ Safe (<50%): {counts['✅']}")
         print(f"⚠️ Alert (50%-79%): {counts['⚠️']}")
         print(f"🔶 Warning (80%-99%): {counts['🔶']}")
@@ -778,7 +778,7 @@ class BudgetTrackerApp:
         if cat is None:
             return
 
-        filtered = [e for e in month.expenses if e.category == cat]
+        filtered = [e for e in month.expenses if e.category == cat]  # Filter expenses
 
         print(f"\n--- Expenses for {cat} ---")
         if not filtered:
@@ -803,7 +803,7 @@ class BudgetTrackerApp:
 
     def menu_settings(self):
         month = self.current_month()
-        if not self.ensure_setup(month):
+        if not self.ensure_setup(month):  # Ensure month is ready
             return
 
         while True:
@@ -815,15 +815,15 @@ class BudgetTrackerApp:
             choice = input_choice("Choose (1-3 or -1): ", ["1", "2", "3", str(BACK)])
 
             if choice == "1":
-                self.update_monthly_budget(month)
+                self.update_monthly_budget(month)  # Update budget
             elif choice == "2":
-                self.manage_categories(month)
+                self.manage_categories(month)  # Categories menu
             elif choice == "3":
-                self.manage_expenses(month)
+                self.manage_expenses(month)  # Expenses menu
             else:
-                return
+                return  # Back
 
-    def update_monthly_budget(self, month: BudgetMonth):
+    def update_monthly_budget(self, month: BudgetMonth):  # Update month budget
         print("\n--- Update Monthly Budget ---")
         current = month.budget if month.budget is not None else 0.0
         print(f"Current budget: {fmt_money(current)} SAR")
@@ -831,17 +831,17 @@ class BudgetTrackerApp:
         if new_budget is None:
             return
 
-        month.set_budget(new_budget)
+        month.set_budget(new_budget)  # Save new budget
         print(f"✅ Budget updated for {month.month_key}.")
         if month.limit_mode == "percent":
             print("ℹ️ Percentage-based limits updated automatically.")
         else:
             print("ℹ️ Fixed limits remain the same amounts.")
 
-        if month.total_expenses() > new_budget:
+        if month.total_expenses() > new_budget:  # Warn if expenses exceed new budget
             print("⚠️ Warning: Expenses exceed new budget!")
 
-    def manage_categories(self, month: BudgetMonth):
+    def manage_categories(self, month: BudgetMonth):  # Categories management menu
         while True:
             print("\n--- Manage Categories ---")
             print("1) View Categories")
@@ -862,7 +862,7 @@ class BudgetTrackerApp:
             else:
                 return
 
-    def view_categories(self, month: BudgetMonth):
+    def view_categories(self, month: BudgetMonth):  # View categories with spending/limits
         print("\n--- Categories ---")
         if month.budget is None or month.limit_mode is None:
             print("❌ Month is not properly set up.")
@@ -871,7 +871,7 @@ class BudgetTrackerApp:
             print("ℹ️ No categories.")
             return
 
-        totals = month.total_by_category()
+        totals = month.total_by_category()   # Spent per category
         mode_name = "Percentage" if month.limit_mode == "percent" else "Fixed"
         print(f"Unified Mode: {mode_name}")
         line()
@@ -884,7 +884,7 @@ class BudgetTrackerApp:
                   f"{fmt_money(spent)} / {fmt_money(limit)} ({pct:.0f}%) {icon}")
         line()
 
-    def add_category_menu(self, month: BudgetMonth):
+    def add_category_menu(self, month: BudgetMonth):  # Add a new category
         print("\n--- Add Category ---")
         if month.limit_mode is None:
             print("❌ Month limit mode not set. Run Month Setup.")
@@ -893,7 +893,7 @@ class BudgetTrackerApp:
         name = input("Enter category name (or -1 to back): ").strip()
         if name == str(BACK):
             return
-        while not name or name in month.categories:
+        while not name or name in month.categories:  # Validate name (not empty / not duplicate)
             if not name:
                 print("❌ Name cannot be empty.")
             else:
@@ -906,29 +906,29 @@ class BudgetTrackerApp:
             value = input_float_or_back("Enter percentage (0-100): ", min_value=0.0)
             if value is None:
                 return
-            while value > 100.0:
+            while value > 100.0:  # Cap at 100%
                 print("❌ Percentage cannot exceed 100.")
                 value = input_float_or_back("Enter percentage (0-100): ", min_value=0.0)
                 if value is None:
                     return
-            ok = month.add_category(Category(name, value))
+            ok = month.add_category(Category(name, value)) # Save %
         else:
             value = input_float_or_back("Enter fixed amount (SAR): ", min_value=0.0)
             if value is None:
                 return
-            ok = month.add_category(Category(name, value))
+            ok = month.add_category(Category(name, value)) # Save SAR
 
         print("✅ Category added successfully." if ok else "❌ Failed to add category.")
 
-    def update_category_menu_numbered(self, month: BudgetMonth):
+    def update_category_menu_numbered(self, month: BudgetMonth): # Update category value (numbered selection)
         print("\n--- Update Category Value ---")
         cat_name = self.pick_category_numbered(month, title="Choose category number to update (or -1 to back): ")
-        if cat_name is None:
+        if cat_name is None:  # Back
             return
 
         if month.limit_mode == "percent":
             value = input_float_or_back("Enter new percentage (0-100): ", min_value=0.0)
-            if value is None:
+            if value is None: # Back
                 return
             while value > 100.0:
                 print("❌ Percentage cannot exceed 100.")
@@ -943,13 +943,13 @@ class BudgetTrackerApp:
         month.update_category_value(cat_name, value)
         print(f"✅ Category '{cat_name}' updated successfully.")
 
-    def delete_category_menu_numbered(self, month: BudgetMonth):
+    def delete_category_menu_numbered(self, month: BudgetMonth): # Delete category (handle existing expenses)
         print("\n--- Delete Category ---")
         cat = self.pick_category_numbered(month, title="Choose category number to delete (or -1 to back): ")
         if cat is None:
             return
 
-        if month.category_has_expenses(cat):
+        if month.category_has_expenses(cat): # Category not empty
             print("⚠️ This category has expenses.")
             print('1) Move expenses to "Other" and delete')
             print("2) Cancel")
@@ -965,14 +965,14 @@ class BudgetTrackerApp:
 
     # -------- Manage Expenses (Edit/Delete/Update Date) --------
 
-    def print_expenses_table(self, month: BudgetMonth):
+    def print_expenses_table(self, month: BudgetMonth): # Print expenses in table format
         print("ID | Date       | Amount | Category       | Description")
         line()
         for e in sorted(month.expenses, key=lambda x: (x.d, x.expense_id)):
             print(f"{e.expense_id:<2} | {e.d} | {fmt_money(e.amount):<6} | {e.category:<13} | {e.description}")
         line()
 
-    def manage_expenses(self, month: BudgetMonth):
+    def manage_expenses(self, month: BudgetMonth):  # Manage expenses (edit/delete)
         while True:
             print("\n--- Manage Expenses ---")
             print("1) Edit Expense (Amount / Category / Description / Date)")
@@ -982,7 +982,7 @@ class BudgetTrackerApp:
             if choice == str(BACK):
                 return
 
-            if not month.expenses:
+            if not month.expenses: # No expenses
                 print("ℹ️ No expenses yet.")
                 return
 
@@ -992,12 +992,12 @@ class BudgetTrackerApp:
             if expense_id is None:
                 continue
 
-            exp = month.get_expense_by_id(expense_id)
+            exp = month.get_expense_by_id(expense_id) # Find expense
             if exp is None:
                 print("❌ Expense ID not found.")
                 continue
 
-            if choice == "2":
+            if choice == "2": # Delete expense
                 deleted = month.delete_expense_by_id(expense_id)
                 print(f"✅ Expense ID {expense_id} deleted successfully." if deleted else "❌ Expense ID not found.")
                 continue
@@ -1012,12 +1012,12 @@ class BudgetTrackerApp:
                 print("4) Update Date")
                 print(f"{BACK}) Back")
                 sub = input_choice("Choose (1-4 or -1): ", ["1", "2", "3", "4", str(BACK)])
-                if sub == str(BACK):
+                if sub == str(BACK): # Exit edit menu
                     break
 
                 if sub == "1":
                     new_amount = input_float_or_back("Enter new amount (SAR) or -1 to back: ", min_value=0.01)
-                    if new_amount is None:
+                    if new_amount is None: # Cancel
                         continue
 
                     if month.budget is not None:
@@ -1031,7 +1031,7 @@ class BudgetTrackerApp:
                             print("➡️ To continue, please update your monthly budget in Settings.")
                             continue
 
-                    exp.amount = new_amount
+                    exp.amount = new_amount  # Update amount
                     print("✅ Amount updated successfully.")
                     progress_line, icon = month.category_progress_line(exp.category)
                     print(progress_line)
@@ -1044,9 +1044,9 @@ class BudgetTrackerApp:
                         print("ℹ️ Expense edit cancelled.")
                         continue
 
-                    exp.category = new_cat
+                    exp.category = new_cat # Update category
                     print("✅ Category updated successfully.")
-
+                    # Show progress for old/new categories
                     old_line, old_icon = month.category_progress_line(old_cat)
                     new_line, new_icon = month.category_progress_line(new_cat)
                     if old_line:
@@ -1058,10 +1058,10 @@ class BudgetTrackerApp:
 
                 elif sub == "3":
                     new_desc = input("Enter new description (or -1 to back): ").strip()
-                    if new_desc == str(BACK):
+                    if new_desc == str(BACK):  # Cancel
                         print("ℹ️ Expense edit cancelled.")
                         continue
-                    exp.description = new_desc
+                    exp.description = new_desc # Update description
                     print("✅ Description updated successfully.")
 
                 else:
@@ -1070,17 +1070,17 @@ class BudgetTrackerApp:
                         print("ℹ️ Expense edit cancelled.")
                         continue
 
-                    old_mk = month_key_from_date(exp.d)
-                    new_mk = month_key_from_date(new_date)
+                    old_mk = month_key_from_date(exp.d)  # Old month key
+                    new_mk = month_key_from_date(new_date)  # New month key
 
-                    old_day = exp.d.day
-                    exp.d = new_date
+                    old_day = exp.d.day # Save old day
+                    exp.d = new_date  # Apply new date
 
-                    if new_mk == old_mk:
+                    if new_mk == old_mk:  # Same month
                         print("✅ Date updated (same month).")
                         continue
 
-                    target_month = self.get_month(new_mk)
+                    target_month = self.get_month(new_mk) # Target month
 
                     if not target_month.is_setup():
                         print(f"⚠️ Target month {new_mk} is not set up. Please run Month Setup for it first.")
@@ -1092,13 +1092,13 @@ class BudgetTrackerApp:
                         print("ℹ️ Date change reverted.")
                         continue
 
-                    if exp.category not in target_month.categories:
+                    if exp.category not in target_month.categories: # Category missing
                         target_month._ensure_other_category()
                         exp.category = "Other"
                         print("ℹ️ Category not found in target month. Moved to 'Other'.")
 
-                    month.delete_expense_by_id(expense_id)
-                    target_month.add_existing_expense(exp)
+                    month.delete_expense_by_id(expense_id) # Remove from old month
+                    target_month.add_existing_expense(exp) # Add to new month
 
                     print(f"✅ Date updated and expense moved to month {new_mk}.")
                     break
@@ -1109,9 +1109,9 @@ class BudgetTrackerApp:
 # =========================
 
 def main():
-    app = BudgetTrackerApp()
-    app.run()
+    app = BudgetTrackerApp()  # Create app instance
+    app.run() # Start application
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # Run only if executed directly
     main()
