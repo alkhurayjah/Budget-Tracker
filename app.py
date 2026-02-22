@@ -131,13 +131,7 @@ for i in range(12):
     month_options.append(f"{y}-{m:02d}")
 if is_logged_in:
 
-    with st.sidebar:
-        st.header("Navigation")
 
-        selected_month = st.selectbox(
-            "Select Month Context",
-            month_options
-    )
 
     if st.button("Logout 🚪"):
         st.session_state.clear()
@@ -402,38 +396,41 @@ def main():
 
     st.title("💰 Personal Budget Tracker")
 
+    # =====================
+    # SIDEBAR (ONLY HERE)
+    # =====================
+    with st.sidebar:
+        st.header("Navigation")
 
+        today = dt_date.today()
+        today_key = month_key_from_date(today)
 
+        # Ensure current month exists
+        app.get_month(today_key)
 
-    # Sidebar for global month selection
-    st.sidebar.header("Navigation")
-    today = dt_date.today()
-    today_key = month_key_from_date(today)
-    
-    # Ensure current month exists
-    app.get_month(today_key) 
-    
-    # Generate the last 12 months automatically
-    generated_months = []
-    for i in range(12):
-        # Subtract months accurately
-        m = today.month - i
-        y = today.year
-        while m <= 0:
-            m += 12
-            y -= 1
-        generated_months.append(f"{y}-{m:02d}")
-        
-    # Combine generated months with any existing months in the app, then sort
-    all_month_keys = set(generated_months + list(app.months.keys()))
-    month_options = sorted(list(all_month_keys), reverse=True)
-    
-    selected_month_key = st.sidebar.selectbox("Select Month Context", month_options)
+        # Generate months (مثال)
+        generated_months = []
+        for i in range(12):
+            m = today.month - i
+            y = today.year
+            while m <= 0:
+                m += 12
+                y -= 1
+            generated_months.append(f"{y}-{m:02d}")
+
+        all_month_keys = set(generated_months + list(app.months.keys()))
+        month_options = sorted(list(all_month_keys), reverse=True)
+
+        selected_month_key = st.selectbox(
+            "Select Month Context",
+            month_options
+        )
+
+        if st.button("Logout 🚪"):
+            st.session_state.clear()
+            st.rerun()
+
     current_month = app.get_month(selected_month_key)
-
-
-
-
 
     # Main UI Tabs
     tab1, tab2, tab3, tab4 = st.tabs(["⚙️ Month Setup", "➕ Add Expense", "📊 Overview", "🛠️ Settings"])
