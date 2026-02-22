@@ -61,9 +61,9 @@ if is_logged_in:
 # =====================
 # AUTH GUARD (VERY IMPORTANT)
 # =====================
-if "user_id" not in st.session_state:
-    st.warning("🔐 Please login to continue")
-    st.stop()
+# if "user_id" not in st.session_state:
+#     st.warning("🔐 Please login to continue")
+#     st.stop()
 
 
 
@@ -941,7 +941,7 @@ def main_app():
                             target_exp.amount = edit_amt
                             target_exp.category = edit_cat
                             target_exp.description = edit_desc
-                            current_month.save_expense(target_exp)
+                            # current_month.save_expense(target_exp)
                             st.success("✅ Expense updated!")
                             st.rerun()
 
