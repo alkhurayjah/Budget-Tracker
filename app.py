@@ -650,9 +650,10 @@ def main():
         st.write("TAB 3 START")
         if current_month.budget is None:
             st.info("ℹ️ This month is not set up yet. Please complete Month Setup first.")
-            st.stop()
-        total_spent = current_month.total_expenses()
-        remaining = current_month.budget - total_spent
+        else:
+            # كل كود الـ Overview أو Settings هنا)
+            total_spent = current_month.total_expenses()
+            remaining = current_month.budget - total_spent
                 
                 # Metrics
         col1, col2, col3 = st.columns(3)
