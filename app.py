@@ -18,8 +18,14 @@ from db.db import (
     get_security_question,
     verify_security_answer,
     update_password,
-    verify_user_phone 
+    verify_user_phone,
+    get_or_create_month,
+    add_category,
+    load_categories,
+    add_transaction,
+    load_transactions
 )
+
 SECURITY_QUESTIONS = [
     "What is your favorite color?",
     "What is the name of your first school?",
@@ -572,43 +578,69 @@ def main():
 
 
     # ------------------ TAB 2: Add Expense ------------------
-    with tab2:
-        st.header("Add a New Expense")
-        if not current_month.is_setup():
-            st.warning("⚠️ Please set up this month in the 'Month Setup' tab first.")
-        else:
-            with st.form("add_expense_form", clear_on_submit=True):
-                col1, col2 = st.columns(2)
-                with col1:
-                    exp_date = st.date_input("Expense Date", value=dt_date.today())
-                    exp_cat = st.selectbox("Category", list(current_month.categories.keys()))
-                with col2:
+with tab2:
+    st.header("➕ Add a New Expense")
 
-                    exp_amount = st.number_input("Amount (SAR)", min_value=0.00, value=0.00, step=10.0)
-                    exp_desc = st.text_input("Description")
-                
-                submit_expense = st.form_submit_button("Save Expense")
-                
-                if submit_expense:
-                    # Add the check for zero value here
-                    if exp_amount <= 0:
-                        st.error("❌ The expense amount must be greater than 0.00 SAR.")
-                    else:
+    if not current_month.is_setup():
+        st.warning("⚠️ Please set up this month in the 'Month Setup' tab first.")
+    else:
+        with st.form("add_expense_form", clear_on_submit=True):
+            col1, col2 = st.columns(2)
 
-                        target_month_key = month_key_from_date(exp_date)
-                        target_month = app.get_month(target_month_key)
-                        
-                        if not target_month.is_setup():
-                            st.error(f"❌ The month {target_month_key} is not set up. Set it up first.")
-                        else:
-                            current_total = target_month.total_expenses()
-                            if current_total + exp_amount > target_month.budget + 1e-9:
-                                st.error(f"🛑 Monthly budget exceeded! You only have {target_month.budget - current_total:.2f} SAR left.")
-                            else:
-                                target_month.add_expense(exp_date, exp_amount, exp_cat, exp_desc)
-                                st.success(f"✅ Expense of {exp_amount:.2f} SAR added to {exp_cat} on {exp_date}!")
-                                st.rerun()
+            with col1:
+                exp_date = st.date_input(
+                    "Expense Date",
+                    value=dt_date.today()
+                )
+                exp_cat = st.selectbox(
+                    "Category",
+                    list(current_month.categories.keys())
+                )
 
+            with col2:
+                exp_amount = st.number_input(
+                    "Amount (SAR)",
+                    min_value=0.00,
+                    value=0.00,
+                    step=10.0
+                )
+                exp_desc = st.text_input("Description")
+
+            submit_expense = st.form_submit_button("Save Expense")
+
+        # =====================
+        # SAVE EXPENSE (DB)
+        # =====================
+        if submit_expense:
+            if exp_amount <= 0:
+                st.error("❌ The expense amount must be greater than 0.00 SAR.")
+            else:
+                # Get or create month in DB
+                month_id, _ = get_or_create_month(
+                    st.session_state["user_id"],
+                    selected_month_key
+                )
+
+                # Save to database
+                add_transaction(
+                    month_id=month_id,
+                    date=exp_date,
+                    amount=exp_amount,
+                    category=exp_cat,
+                    description=exp_desc
+                )
+
+                # Update UI memory (for immediate display)
+                current_month.add_expense(
+                    exp_date,
+                    exp_amount,
+                    exp_cat,
+                    exp_desc
+                )
+
+                st.success("✅ Expense saved successfully")
+                st.rerun()
+        
     # ------------------ TAB 3: Overview ------------------
     
     with tab3:
