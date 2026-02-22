@@ -142,3 +142,18 @@ def delete_expense_db(expense_id, user_id):
     conn.commit()
     cur.close()
     conn.close()
+
+def verify_user_phone(username, phone):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT id FROM users
+        WHERE username = %s AND phone = %s
+    """, (username, phone))
+
+    result = cur.fetchone()
+    cur.close()
+    conn.close()
+
+    return result is not None

@@ -13,7 +13,8 @@ from db.db import (
     authenticate_user,
     get_security_question,
     verify_security_answer,
-    update_password
+    update_password,
+    verify_user_phone 
 )
 SECURITY_QUESTIONS = [
     "What is your favorite color?",
@@ -64,33 +65,50 @@ with tab2:
             st.error("User already exists or error occurred")
 
 # FORGOT PASSWORD
+# FORGOT PASSWORD (UPDATED)
 with tab3:
     st.subheader("Forgot Password")
 
+    # STEP 1: verify user + phone
     fp_user = st.text_input("Username", key="fp_user")
+    fp_phone = st.text_input("Phone Number", key="fp_phone")
 
-    if st.button("Get Security Question"):
-        question = get_security_question(fp_user)
-
-        if question:
-            st.session_state["fp_question"] = question
+    if st.button("Verify User"):
+        if verify_user_phone(fp_user, fp_phone):
+            st.session_state["fp_verified"] = True
             st.session_state["fp_username"] = fp_user
+            st.session_state["fp_question"] = get_security_question(fp_user)
         else:
-            st.error("User not found ❌")
+            st.error("Username or phone number is incorrect ❌")
 
-    if "fp_question" in st.session_state:
+    # STEP 2: security question + reset
+    if st.session_state.get("fp_verified"):
         st.info(st.session_state["fp_question"])
 
-        answer = st.text_input("Your Answer", key="fp_answer")
-        new_pass = st.text_input("New Password", type="password", key="fp_new_pass")
+        answer = st.text_input("Security Answer", key="fp_answer")
+        new_pass = st.text_input(
+            "New Password",
+            type="password",
+            key="fp_new_pass"
+        )
 
         if st.button("Reset Password"):
-            if verify_security_answer(st.session_state["fp_username"], answer):
-                update_password(st.session_state["fp_username"], new_pass)
+            if verify_security_answer(
+                st.session_state["fp_username"],
+                answer
+            ):
+                update_password(
+                    st.session_state["fp_username"],
+                    new_pass
+                )
                 st.success("Password updated successfully ✅")
 
-                # تنظيف الحالة
-                del st.session_state["fp_question"]
-                del st.session_state["fp_username"]
+                # تنظيف الـ session
+                for k in [
+                    "fp_verified",
+                    "fp_username",
+                    "fp_question"
+                ]:
+                    st.session_state.pop(k, None)
             else:
-                st.error("Wrong answer ❌")
+                st.error("Wrong security answer ❌")
