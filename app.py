@@ -38,6 +38,8 @@ st.title("Budget Tracker")
 
 
 tab1, tab2, tab3 = st.tabs(["Login", "Sign Up", "Forgot Password"])
+if "user_id" not in st.session_state:
+    st.stop()
 
 
 
