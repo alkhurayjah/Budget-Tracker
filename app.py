@@ -709,241 +709,242 @@ def main_app():
         st.header("Settings")
         if current_month.budget is None:
             st.info("ℹ️ Please complete Month Setup first.")
+            
+        else:
         
-        
-        with st.expander("Update Monthly Budget"):
-                new_budget = st.number_input("New Budget (SAR)", min_value=1.0, value=current_month.budget, step=100.0)
-                if st.button("Update Budget"):
-                    current_month.set_budget(new_budget)
-                    st.success("✅ Budget updated!")
-                    st.rerun()
-
-        with st.expander("Manage Categories"):
-
-                st.subheader("Current Allocation")
-
-
-
-                # --- STEP 1: Determine Mode & Global Stats ---
-                if current_month.categories:
-                    # Filter out 'Other' for allocation calculations
-                    active_cats = [c for name, c in current_month.categories.items() if name != "Other"]
-                    
-                    # Use the first non-Other category to find mode, or default to percent
-                    first_cat = active_cats[0] if active_cats else list(current_month.categories.values())[0]
-                    active_mode = first_cat.limit_type
-                else:
-                    active_mode = "percent"
-
-                # Calculate real-time allocation EXCLUDING "Other"
-                allocated_sar = sum(c.calc_limit(current_month.budget) for name, c in current_month.categories.items() if name != "Other")
-                remaining_sar = current_month.budget - allocated_sar
-                
-                if active_mode == "percent":
-                    allocated_val = sum(c.value for name, c in current_month.categories.items() if name != "Other")
-                    remaining_val = 100.0 - allocated_val
-                    unit = "%"
-                else:
-                    allocated_val = allocated_sar
-                    remaining_val = remaining_sar
-                    unit = "SAR"
-
-
-
-
-                # Metrics Overview
-                col_m1, col_m2, col_m3 = st.columns(3)
-                col_m1.metric("Total Budget", f"{current_month.budget:,.2f} SAR")
-                col_m2.metric(f"Allocated ({unit})", f"{allocated_val:g} {unit}")
-                col_m3.metric(f"Remaining ({unit})", f"{max(0.0, remaining_val):g} {unit}")
-
-                st.divider()
-
-                # --- SECTION 1: Add Category Form ---
-                st.write(f"**➕ Add New {active_mode.title()} Category**")
-                with st.form("settings_add_cat_form", clear_on_submit=True):
-                    col1, col2 = st.columns([3, 2])
-                    new_name = col1.text_input("Category Name", placeholder="e.g., Health")
-                    
-                    # Form only accepts values for the active mode
-                    new_val = col2.number_input(
-                        f"Limit Value ({unit})", 
-                        min_value=0.0, 
-                        step=1.0 if active_mode == "percent" else 50.0
-                    )
-                    
-                    if st.form_submit_button("Add to Budget"):
-                        # Validation Logic
-                        if not new_name.strip():
-                            st.error("❌ Category name cannot be empty.")
-                        elif new_name.strip() in current_month.categories:
-                            st.error(f"❌ '{new_name}' already exists.")
-                        elif new_val <= 0:
-                            st.error(f"❌ Value must be greater than zero.")
-                        elif new_val > (remaining_val + 1e-9):
-                            st.error(f"❌ Limit exceeded! Only {remaining_val:g} {unit} available.")
-                        else:
-                            # Add the category using the locked-in mode
-                            new_cat = Category(new_name.strip(), active_mode, new_val)
-                            current_month.add_category(new_cat)
-                            st.success(f"✅ Added {new_name} at {new_val}{unit}")
-                            st.rerun()
-
-                st.divider()
-
-
-                # --- SECTION 2: Edit Existing Category ---
-                st.write("**📝 Edit Existing Category**")
-                
-                if not current_month.categories:
-                    st.info("No categories available to edit.")
-                else:
-                    # Dropdown to select which category to modify
-                    cat_to_edit_name = st.selectbox(
-                        "Select Category to Edit", 
-                        options=list(current_month.categories.keys()),
-                        key="edit_cat_selector"
-                    )
-                    
-                    target_cat = current_month.categories[cat_to_edit_name]
-
-
-                    with st.form("edit_category_form"):
-                        col1, col2 = st.columns([3, 2])
+            with st.expander("Update Monthly Budget"):
+                    new_budget = st.number_input("New Budget (SAR)", min_value=1.0, value=current_month.budget, step=100.0)
+                    if st.button("Update Budget"):
+                        current_month.set_budget(new_budget)
+                        st.success("✅ Budget updated!")
+                        st.rerun()
+    
+            with st.expander("Manage Categories"):
+    
+                    st.subheader("Current Allocation")
+    
+    
+    
+                    # --- STEP 1: Determine Mode & Global Stats ---
+                    if current_month.categories:
+                        # Filter out 'Other' for allocation calculations
+                        active_cats = [c for name, c in current_month.categories.items() if name != "Other"]
                         
-                        # Check if the selected category is "Other"
-                        is_other = (cat_to_edit_name == "Other")
-                        
-                        # Pre-fill with current values (disabled if it is the 'Other' category)
-                        edit_name = col1.text_input("New Category Name", value=target_cat.name, disabled=is_other)
-                        
-                        if is_other:
-                            # Hide the massive numeric value and disable the input completely
-                            col2.text_input(f"New Value ({unit})", value="Hidden", disabled=True)
-                            edit_val = target_cat.value # Keep the variable defined for the backend
-                        else:
-                            edit_val = col2.number_input(
-                                f"New Value ({unit})", 
-                                min_value=0.01, 
-                                value=float(target_cat.value),
-                                step=1.0 if active_mode == "percent" else 50.0
-                            )
-                        
-                        if is_other:
-                            st.caption("The 'Other' category is managed by the system and cannot be edited.")
-                        else:
-                            st.caption(f"Current Limit: {target_cat.display_limit()}")
-                        
-                        # Disable the save button so users don't trigger limit validation errors on "Other"
-                        submit_edit = st.form_submit_button("💾 Save Changes", disabled=is_other)
-
-                        
-                        if submit_edit:
-                            # 1. Calculate the 'other' categories' total to check limits
-                            other_cats_total = sum(
-                                c.value for name, c in current_month.categories.items() 
-                                if name != cat_to_edit_name
-                            )
-                            
-                            # 2. Validation
-                            if not edit_name.strip():
-                                st.error("❌ Name cannot be empty.")
-                            # Check if renaming to an existing name (that isn't itself)
-                            elif edit_name.strip() != cat_to_edit_name and edit_name.strip() in current_month.categories:
-                                st.error(f"❌ A category named '{edit_name}' already exists.")
-                            # Check if the new value exceeds the total budget capacity
-                            elif (other_cats_total + edit_val) > (100.0 if active_mode == "percent" else current_month.budget) + 1e-9:
-                                available = (100.0 if active_mode == "percent" else current_month.budget) - other_cats_total
-                                st.error(f"❌ Limit exceeded! Max available for this category is {available:g} {unit}.")
-                            else:
-                                # 3. Apply changes
-                                # If the name changed, we must replace the dictionary key
-                                if edit_name.strip() != cat_to_edit_name:
-                                    # Update category name in expense records first
-                                    for exp in current_month.expenses:
-                                        if exp.category == cat_to_edit_name:
-                                            exp.category = edit_name.strip()
-                                    
-                                    # Update the categories dictionary
-                                    del current_month.categories[cat_to_edit_name]
-                                
-                                # Update values
-                                target_cat.name = edit_name.strip()
-                                target_cat.value = edit_val
-                                current_month.categories[target_cat.name] = target_cat
-                                
-                                st.success(f"✅ Updated '{target_cat.name}' successfully!")
-                                st.rerun()
-
-
-
-                # --- SECTION 3: Delete Category ---
-                st.write("**🗑️ Remove Category**")
-                if not current_month.categories:
-                    st.info("No categories available to delete.")
-                else:
-                    cat_list = list(current_month.categories.keys())
-                    del_name = st.selectbox("Select Category to Remove", cat_list)
-                    
-                    is_deleting_other = (del_name == "Other")
-                    
-                    # The dynamic key forces Streamlit to forget the "checked" state when switching to "Other"
-                    move_expenses = st.checkbox(
-                        "Move the current expenses to 'Others'", 
-                        value=False,
-                        disabled=is_deleting_other,
-                        key=f"move_exp_{is_deleting_other}" 
-                    )
-                    
-                    if is_deleting_other:
-                        st.warning("⚠️ This will permanently delete the 'Other' category and all its expenses.")
-                        st.caption("Cannot move expenses to 'Other' when deleting the 'Other' category itself.")
-                    elif move_expenses:
-                        st.info("💡 Expenses under this category will be moved to new category called 'Other'.")
+                        # Use the first non-Other category to find mode, or default to percent
+                        first_cat = active_cats[0] if active_cats else list(current_month.categories.values())[0]
+                        active_mode = first_cat.limit_type
                     else:
-                        st.warning(f"⚠️ This will permanently delete all expenses in '{del_name}'.")
+                        active_mode = "percent"
+    
+                    # Calculate real-time allocation EXCLUDING "Other"
+                    allocated_sar = sum(c.calc_limit(current_month.budget) for name, c in current_month.categories.items() if name != "Other")
+                    remaining_sar = current_month.budget - allocated_sar
                     
-                    if st.button("Delete Selected Category", type="primary"):
-                        safe_move = False if is_deleting_other else move_expenses
+                    if active_mode == "percent":
+                        allocated_val = sum(c.value for name, c in current_month.categories.items() if name != "Other")
+                        remaining_val = 100.0 - allocated_val
+                        unit = "%"
+                    else:
+                        allocated_val = allocated_sar
+                        remaining_val = remaining_sar
+                        unit = "SAR"
+    
+    
+    
+    
+                    # Metrics Overview
+                    col_m1, col_m2, col_m3 = st.columns(3)
+                    col_m1.metric("Total Budget", f"{current_month.budget:,.2f} SAR")
+                    col_m2.metric(f"Allocated ({unit})", f"{allocated_val:g} {unit}")
+                    col_m3.metric(f"Remaining ({unit})", f"{max(0.0, remaining_val):g} {unit}")
+    
+                    st.divider()
+    
+                    # --- SECTION 1: Add Category Form ---
+                    st.write(f"**➕ Add New {active_mode.title()} Category**")
+                    with st.form("settings_add_cat_form", clear_on_submit=True):
+                        col1, col2 = st.columns([3, 2])
+                        new_name = col1.text_input("Category Name", placeholder="e.g., Health")
                         
-                        success, message = current_month.delete_category(del_name, move_to_other=safe_move)
-                        if success:
-                            st.success(message)
-                            st.rerun()
-
+                        # Form only accepts values for the active mode
+                        new_val = col2.number_input(
+                            f"Limit Value ({unit})", 
+                            min_value=0.0, 
+                            step=1.0 if active_mode == "percent" else 50.0
+                        )
+                        
+                        if st.form_submit_button("Add to Budget"):
+                            # Validation Logic
+                            if not new_name.strip():
+                                st.error("❌ Category name cannot be empty.")
+                            elif new_name.strip() in current_month.categories:
+                                st.error(f"❌ '{new_name}' already exists.")
+                            elif new_val <= 0:
+                                st.error(f"❌ Value must be greater than zero.")
+                            elif new_val > (remaining_val + 1e-9):
+                                st.error(f"❌ Limit exceeded! Only {remaining_val:g} {unit} available.")
+                            else:
+                                # Add the category using the locked-in mode
+                                new_cat = Category(new_name.strip(), active_mode, new_val)
+                                current_month.add_category(new_cat)
+                                st.success(f"✅ Added {new_name} at {new_val}{unit}")
+                                st.rerun()
+    
+                    st.divider()
+    
+    
+                    # --- SECTION 2: Edit Existing Category ---
+                    st.write("**📝 Edit Existing Category**")
+                    
+                    if not current_month.categories:
+                        st.info("No categories available to edit.")
+                    else:
+                        # Dropdown to select which category to modify
+                        cat_to_edit_name = st.selectbox(
+                            "Select Category to Edit", 
+                            options=list(current_month.categories.keys()),
+                            key="edit_cat_selector"
+                        )
+                        
+                        target_cat = current_month.categories[cat_to_edit_name]
+    
+    
+                        with st.form("edit_category_form"):
+                            col1, col2 = st.columns([3, 2])
                             
-
-
-    with st.expander("Manage Expenses (Edit/Delete)"):
-                if not current_month.expenses:
-                    st.info("No expenses to manage.")
-                else:
-                    exp_options = {e.expense_id: f"ID {e.expense_id}: {e.d} - {e.category} - {e.amount} SAR" for e in current_month.expenses}
-                    selected_exp_id = st.selectbox("Select Expense", list(exp_options.keys()), format_func=lambda x: exp_options[x])
-                    
-                    target_exp = current_month.get_expense_by_id(selected_exp_id)
-                    
-                    col_del, col_edit = st.columns(2)
-                    with col_del:
-                        if st.button("🗑️ Delete Expense", type="primary"):
-                            current_month.delete_expense_by_id(selected_exp_id)
-                            st.success("✅ Expense deleted.")
-                            st.rerun()
-                    
-                    st.write("---")
-                    st.write("**Edit Expense details:**")
-                    with st.form("edit_exp_form"):
-                        edit_amt = st.number_input("New Amount", min_value=0.01, value=float(target_exp.amount), step=10.0)
-                        edit_cat = st.selectbox("New Category", list(current_month.categories.keys()), index=list(current_month.categories.keys()).index(target_exp.category))
-                        edit_desc = st.text_input("New Description", value=target_exp.description)
+                            # Check if the selected category is "Other"
+                            is_other = (cat_to_edit_name == "Other")
+                            
+                            # Pre-fill with current values (disabled if it is the 'Other' category)
+                            edit_name = col1.text_input("New Category Name", value=target_cat.name, disabled=is_other)
+                            
+                            if is_other:
+                                # Hide the massive numeric value and disable the input completely
+                                col2.text_input(f"New Value ({unit})", value="Hidden", disabled=True)
+                                edit_val = target_cat.value # Keep the variable defined for the backend
+                            else:
+                                edit_val = col2.number_input(
+                                    f"New Value ({unit})", 
+                                    min_value=0.01, 
+                                    value=float(target_cat.value),
+                                    step=1.0 if active_mode == "percent" else 50.0
+                                )
+                            
+                            if is_other:
+                                st.caption("The 'Other' category is managed by the system and cannot be edited.")
+                            else:
+                                st.caption(f"Current Limit: {target_cat.display_limit()}")
+                            
+                            # Disable the save button so users don't trigger limit validation errors on "Other"
+                            submit_edit = st.form_submit_button("💾 Save Changes", disabled=is_other)
+    
+                            
+                            if submit_edit:
+                                # 1. Calculate the 'other' categories' total to check limits
+                                other_cats_total = sum(
+                                    c.value for name, c in current_month.categories.items() 
+                                    if name != cat_to_edit_name
+                                )
+                                
+                                # 2. Validation
+                                if not edit_name.strip():
+                                    st.error("❌ Name cannot be empty.")
+                                # Check if renaming to an existing name (that isn't itself)
+                                elif edit_name.strip() != cat_to_edit_name and edit_name.strip() in current_month.categories:
+                                    st.error(f"❌ A category named '{edit_name}' already exists.")
+                                # Check if the new value exceeds the total budget capacity
+                                elif (other_cats_total + edit_val) > (100.0 if active_mode == "percent" else current_month.budget) + 1e-9:
+                                    available = (100.0 if active_mode == "percent" else current_month.budget) - other_cats_total
+                                    st.error(f"❌ Limit exceeded! Max available for this category is {available:g} {unit}.")
+                                else:
+                                    # 3. Apply changes
+                                    # If the name changed, we must replace the dictionary key
+                                    if edit_name.strip() != cat_to_edit_name:
+                                        # Update category name in expense records first
+                                        for exp in current_month.expenses:
+                                            if exp.category == cat_to_edit_name:
+                                                exp.category = edit_name.strip()
+                                        
+                                        # Update the categories dictionary
+                                        del current_month.categories[cat_to_edit_name]
+                                    
+                                    # Update values
+                                    target_cat.name = edit_name.strip()
+                                    target_cat.value = edit_val
+                                    current_month.categories[target_cat.name] = target_cat
+                                    
+                                    st.success(f"✅ Updated '{target_cat.name}' successfully!")
+                                    st.rerun()
+    
+    
+    
+                    # --- SECTION 3: Delete Category ---
+                    st.write("**🗑️ Remove Category**")
+                    if not current_month.categories:
+                        st.info("No categories available to delete.")
+                    else:
+                        cat_list = list(current_month.categories.keys())
+                        del_name = st.selectbox("Select Category to Remove", cat_list)
                         
-                        if st.form_submit_button("💾 Save Changes"):
-                            target_exp.amount = edit_amt
-                            target_exp.category = edit_cat
-                            target_exp.description = edit_desc
-                            # current_month.save_expense(target_exp)
-                            st.success("✅ Expense updated!")
-                            st.rerun()
+                        is_deleting_other = (del_name == "Other")
+                        
+                        # The dynamic key forces Streamlit to forget the "checked" state when switching to "Other"
+                        move_expenses = st.checkbox(
+                            "Move the current expenses to 'Others'", 
+                            value=False,
+                            disabled=is_deleting_other,
+                            key=f"move_exp_{is_deleting_other}" 
+                        )
+                        
+                        if is_deleting_other:
+                            st.warning("⚠️ This will permanently delete the 'Other' category and all its expenses.")
+                            st.caption("Cannot move expenses to 'Other' when deleting the 'Other' category itself.")
+                        elif move_expenses:
+                            st.info("💡 Expenses under this category will be moved to new category called 'Other'.")
+                        else:
+                            st.warning(f"⚠️ This will permanently delete all expenses in '{del_name}'.")
+                        
+                        if st.button("Delete Selected Category", type="primary"):
+                            safe_move = False if is_deleting_other else move_expenses
+                            
+                            success, message = current_month.delete_category(del_name, move_to_other=safe_move)
+                            if success:
+                                st.success(message)
+                                st.rerun()
+    
+                                
+    
+    
+            with st.expander("Manage Expenses (Edit/Delete)"):
+                        if not current_month.expenses:
+                            st.info("No expenses to manage.")
+                        else:
+                            exp_options = {e.expense_id: f"ID {e.expense_id}: {e.d} - {e.category} - {e.amount} SAR" for e in current_month.expenses}
+                            selected_exp_id = st.selectbox("Select Expense", list(exp_options.keys()), format_func=lambda x: exp_options[x])
+                            
+                            target_exp = current_month.get_expense_by_id(selected_exp_id)
+                            
+                            col_del, col_edit = st.columns(2)
+                            with col_del:
+                                if st.button("🗑️ Delete Expense", type="primary"):
+                                    current_month.delete_expense_by_id(selected_exp_id)
+                                    st.success("✅ Expense deleted.")
+                                    st.rerun()
+                            
+                            st.write("---")
+                            st.write("**Edit Expense details:**")
+                            with st.form("edit_exp_form"):
+                                edit_amt = st.number_input("New Amount", min_value=0.01, value=float(target_exp.amount), step=10.0)
+                                edit_cat = st.selectbox("New Category", list(current_month.categories.keys()), index=list(current_month.categories.keys()).index(target_exp.category))
+                                edit_desc = st.text_input("New Description", value=target_exp.description)
+                                
+                                if st.form_submit_button("💾 Save Changes"):
+                                    target_exp.amount = edit_amt
+                                    target_exp.category = edit_cat
+                                    target_exp.description = edit_desc
+                                    # current_month.save_expense(target_exp)
+                                    st.success("✅ Expense updated!")
+                                    st.rerun()
 
 # =====================
 # APP ENTRY POINT
