@@ -616,7 +616,7 @@ def main_app():
                 with col2:
                     exp_amount = st.number_input(
                         "Amount (SAR)",
-                        min_value=0.01,
+                        min_value=0.00,
                         step=10.0
                     )
                     exp_desc = st.text_input("Description")
@@ -825,7 +825,7 @@ def main_app():
                             else:
                                 edit_val = col2.number_input(
                                     f"New Value ({unit})", 
-                                    min_value=0.01, 
+                                    min_value=1.00, 
                                     value=float(target_cat.value),
                                     step=1.0 if active_mode == "percent" else 50.0
                                 )
@@ -934,7 +934,7 @@ def main_app():
                             st.write("---")
                             st.write("**Edit Expense details:**")
                             with st.form("edit_exp_form"):
-                                edit_amt = st.number_input("New Amount", min_value=0.01, value=float(target_exp.amount), step=10.0)
+                                edit_amt = st.number_input("New Amount", min_value=1.00, value=float(target_exp.amount), step=1.00)
                                 edit_cat = st.selectbox("New Category", list(current_month.categories.keys()), index=list(current_month.categories.keys()).index(target_exp.category))
                                 edit_desc = st.text_input("New Description", value=target_exp.description)
                                 
