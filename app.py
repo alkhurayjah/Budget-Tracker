@@ -597,7 +597,7 @@ def main_app():
         st.header("➕ Add a New Expense")
 
         if not current_month.is_setup():
-            st.warning("⚠️ Please set up this month first from 'Month Setup'.")
+            st.info("ℹ️ Please set up this month first from 'Month Setup'.")
         else:
             with st.form("add_expense_form", clear_on_submit=True):
 
