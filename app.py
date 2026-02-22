@@ -646,61 +646,61 @@ def main():
     # ------------------ TAB 3: Overview ------------------
         
     with tab3:
-            st.header(f"Expenses Overview ({selected_month_key})")
-            if current_month.budget is None:
-                st.info("ℹ️ This month is not set up yet. Please complete Month Setup first.")
-                st.stop()
-            total_spent = current_month.total_expenses()
-            remaining = current_month.budget - total_spent
+        st.header(f"Expenses Overview ({selected_month_key})")
+        if current_month.budget is None:
+            st.info("ℹ️ This month is not set up yet. Please complete Month Setup first.")
+            st.stop()
+        total_spent = current_month.total_expenses()
+        remaining = current_month.budget - total_spent
                 
                 # Metrics
-            col1, col2, col3 = st.columns(3)
-            col1.metric("Total Budget", f"{current_month.budget:.2f} SAR")
-            col2.metric("Total Spent", f"{total_spent:.2f} SAR")
-            col3.metric("Remaining", f"{remaining:.2f} SAR", delta=f"{-total_spent:.2f} SAR", delta_color="normal")
+        col1, col2, col3 = st.columns(3)
+        col1.metric("Total Budget", f"{current_month.budget:.2f} SAR")
+        col2.metric("Total Spent", f"{total_spent:.2f} SAR")
+        col3.metric("Remaining", f"{remaining:.2f} SAR", delta=f"{-total_spent:.2f} SAR", delta_color="normal")
                 
-            st.divider()
+        st.divider()
                 
 
 
                 # Category Progress
                 
-            st.subheader("Category Limits & Progress")
+        st.subheader("Category Limits & Progress")
 
-            totals = current_month.total_by_category()
-            for cat_name, cat in current_month.categories.items():
-                    spent = totals.get(cat_name, 0.0)
-                    limit = cat.calc_limit(current_month.budget)
-                    icon = calc_status(spent, limit)
-                    pct = 0.0 if limit <= 0 else (spent / limit)
+        totals = current_month.total_by_category()
+        for cat_name, cat in current_month.categories.items():
+            spent = totals.get(cat_name, 0.0)
+            limit = cat.calc_limit(current_month.budget)
+            icon = calc_status(spent, limit)
+            pct = 0.0 if limit <= 0 else (spent / limit)
                     
-                    if cat_name != "Other":
-                        st.write(f"**{cat_name}** {icon} ({spent:.2f} / {limit:.2f} SAR) {((spent / limit) * 100):.2f} %")
-                    else:
+            if cat_name != "Other":
+                st.write(f"**{cat_name}** {icon} ({spent:.2f} / {limit:.2f} SAR) {((spent / limit) * 100):.2f} %")
+            else:
                         st.write(f"**{cat_name}** {icon} ({spent:.2f})")
                         
                     # Get the dynamic color based on spending ratio
-                    bar_color = get_progress_color(pct)
+            bar_color = get_progress_color(pct)
                     
                     # Cap the visual width at 100% so it doesn't break the container
-                    visual_width = min(pct * 100, 100)
+            visual_width = min(pct * 100, 100)
                     
                     # Create a custom HTML progress bar
-                    custom_progress_html = f"""
+            custom_progress_html = f"""
                     <div style="width: 100%; background-color: #444444; border-radius: 5px; margin-bottom: 20px;">
                         <div style="width: {visual_width}%; height: 8px; background-color: {bar_color}; border-radius: 5px; transition: width 0.5s;"></div>
                     </div>
                     """
-                    if cat_name == "Other":
+            if cat_name == "Other":
 
                         # Create a custom HTML progress bar
-                        custom_progress_html = f"""
+                custom_progress_html = f"""
                         <div style="width: 100%; background-color: #444444; border-radius: 5px; margin-bottom: 20px;">
                             <div style="width: 100%; height: 8px; background-color: SkyBlue; border-radius: 5px; transition: width 0.5s;"></div>
                         </div>
                         """ 
 
-                    st.markdown(custom_progress_html, unsafe_allow_html=True)
+            st.markdown(custom_progress_html, unsafe_allow_html=True)
 
 
 
@@ -711,7 +711,7 @@ def main():
             else:
                     df = pd.DataFrame([vars(e) for e in current_month.expenses])
                     df.rename(columns={'expense_id': 'ID', 'd': 'Date', 'amount': 'Amount (SAR)', 'category': 'Category', 'description': 'Description'}, inplace=True)
-    st.dataframe(df, use_container_width=True, hide_index=True)
+        st.dataframe(df, use_container_width=True, hide_index=True)
 
 
 
