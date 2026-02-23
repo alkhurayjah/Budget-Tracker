@@ -58,13 +58,6 @@ if is_logged_in:
         st.session_state.clear()
         st.rerun()
 
-# =====================
-# AUTH GUARD (VERY IMPORTANT)
-# =====================
-# if "user_id" not in st.session_state:
-#     st.warning("🔐 Please login to continue")
-#     st.stop()
-
 
 
 
@@ -113,6 +106,9 @@ def apply_custom_width():
 # =========================
 # Helper Functions
 # =========================
+
+
+
 def month_key_from_date(d):
     return d.strftime("%Y-%m")
 
@@ -140,9 +136,13 @@ def get_progress_color(ratio):
     else:
         return "#F44336"  # Red (Danger)
 
+
 # =========================
 # Data Models
 # =========================
+
+
+
 @dataclass
 class Category:
     name: str
@@ -206,6 +206,7 @@ class BudgetMonth:
         if move_to_other:
             other_name = "Other"
             if other_name not in self.categories:
+                
                 # We still give it a limit for the UI, but we will ignore it in math
                 self.categories[other_name] = Category(other_name, "fixed", 1000000.0)
             
@@ -308,6 +309,7 @@ class BudgetTrackerApp:
 # =========================
 # Streamlit UI Components
 # =========================
+
 def init_session():
     if 'app' not in st.session_state:
         st.session_state.app = BudgetTrackerApp()
@@ -419,6 +421,7 @@ def main_app():
     # =====================
     # SIDEBAR (ONLY HERE)
     # =====================
+    
     with st.sidebar:
         st.header("Navigation")
 
@@ -949,10 +952,6 @@ def main_app():
 # APP ENTRY POINT
 # =====================
 
-# if "user_id" in st.session_state:
-#     main()
-# else:
-#     st.info("🔐 Please login to continue")
 
 if "user_id" not in st.session_state:
     login_ui()  # Show ONLY the login screen if not authenticated
